@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jackc/pgx"
+	"strings"
 	"time"
 )
 
@@ -19,6 +20,68 @@ func main() {
 	defer conn.Close()
 	write_log("Log", "连接数据库成功")
 	//ceateTable(conn, err)
+	insertLine(conn, err)
+}
+
+/*
+功能描述：插入行
+参数说明：
+conn *pgx.Conn -- 连接信息
+err error --错误信息
+返回值说明：无
+*/
+func insertLine(conn *pgx.Conn, err error) {
+	var error_msg string
+	var sql string
+	var nickname string
+	condition1 := false
+	condition2 := false
+	condition3 := false
+
+	//插入数据
+	if condition1 {
+		sql = "insert into pgtest values('1','zhangsan'),('2','lisi');"
+		_, err = conn.Exec(sql)
+		if err != nil {
+			error_msg = "插入数据失败,详情：" + err.Error()
+			write_log("Error", error_msg)
+			return
+		} else {
+			write_log("Log", "插入数据成功")
+		}
+	}
+
+	//绑定变量插入数据,不需要做防注入处理
+	if condition2 {
+		sql = "insert into pgtest values($1,$2),($3,$4);"
+		_, err = conn.Exec(sql, "3", "postgresql", "4", "postgres")
+		if err != nil {
+			error_msg = "插入数据失败,详情：" + err.Error()
+			write_log("Error", error_msg)
+			return
+		} else {
+			write_log("Log", "插入数据成功")
+		}
+	}
+
+	//拼接sql 语句插入数据,需要做防注入处理
+	if condition3 {
+		nickname = "pg is good!"
+		sql = "insert into pgtest values('1','" + sql_data_encode(nickname) + "')"
+		_, err = conn.Exec(sql)
+		if err != nil {
+			error_msg = "插入数据失败,详情：" + err.Error()
+			write_log("Error", error_msg)
+			return
+		} else {
+			write_log("Log", "插入数据成功")
+		}
+	}
+}
+
+// 替换字符串，n为替换次数，负数表示无限制
+func sql_data_encode(str string) string {
+	return strings.Replace(str, "pg", "sqli", -1)
 }
 
 /*

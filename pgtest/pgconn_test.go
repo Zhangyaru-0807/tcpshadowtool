@@ -19,3 +19,12 @@ func TestPgCreatetb(t *testing.T) {
 	ceateTable(conn, err)
 	conn.Close()
 }
+
+func TestPgInsertLine(t *testing.T) {
+	conn, err := db_connect()
+	if err != nil {
+		t.Errorf("error连接数据库")
+	} //程序运行结束时关闭连接
+	insertLine(conn, err)
+	conn.Close()
+}
