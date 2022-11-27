@@ -8,7 +8,6 @@ import (
 
 func main() {
 	var error_msg string
-	var sql string
 
 	//连接数据库
 	conn, err := db_connect()
@@ -19,25 +18,29 @@ func main() {
 	} //程序运行结束时关闭连接
 	defer conn.Close()
 	write_log("Log", "连接数据库成功")
+	//ceateTable(conn, err)
+}
 
-	condition := false
-	//建立数据表
-	if condition == true {
-		sql = "create table pgtest(id varchar(20), name varchar(100));"
-		_, err = conn.Exec(sql)
-		if err != nil {
-			error_msg = "创建数据表失败,详情：" + err.Error()
-			write_log("Error", error_msg)
-			return
-		} else {
-			write_log("Log", "创建数据表成功")
-		}
+/*
+功能描述：创建表
+参数说明：
+conn *pgx.Conn -- 连接信息
+err error --错误信息
+返回值说明：无
+*/
+func ceateTable(conn *pgx.Conn, err error) {
+	var sql string
+	var error_msg string
+
+	sql = "create table pgtest1(id varchar(20), name varchar(100));"
+	_, err = conn.Exec(sql)
+	if err != nil {
+		error_msg = "创建数据表失败,详情：" + err.Error()
+		write_log("Error", error_msg)
+		return
+	} else {
+		write_log("Log", "创建数据表成功")
 	}
-	
-	if condition == true {
-
-	}
-
 }
 
 /*
