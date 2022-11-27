@@ -20,7 +20,69 @@ func main() {
 	defer conn.Close()
 	write_log("Log", "连接数据库成功")
 	//ceateTable(conn, err)
-	insertLine(conn, err)
+	//insertLine(conn, err)
+	//selectTable(conn, err)
+}
+
+/*
+功能描述：查询表
+参数说明：
+conn *pgx.Conn -- 连接信息
+err error --错误信息
+返回值说明：无
+*/
+func selectTable(conn *pgx.Conn, err error) {
+	var error_msg string
+	var sql string
+	var name string
+	var id string
+
+	if false {
+		sql = "SELECT id,name FROM pgtest LIMIT 2"
+		rows, err := conn.Query(sql)
+		if err != nil {
+			error_msg = "查询数据失败,详情：" + err.Error()
+			write_log("Error", error_msg)
+			return
+		} else {
+			write_log("Log", "查询数据成功")
+		}
+		for rows.Next() {
+			err = rows.Scan(&id, &name)
+			if err != nil {
+				error_msg = "执行查询失败，详情：" + err.Error()
+				write_log("Error", error_msg)
+				return
+			}
+			error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
+			write_log("Log", error_msg)
+		}
+		rows.Close()
+	}
+
+	if false {
+		name = "postgres"
+		sql = "SELECT id,name FROM pgtest WHERE name ='" + sql_data_encode(name) + "' "
+		rows, err := conn.Query(sql)
+		if err != nil {
+			error_msg = "查询数据失败,详情：" + err.Error()
+			write_log("Error", error_msg)
+			return
+		} else {
+			write_log("Log", "查询数据成功")
+		}
+		defer rows.Close()
+		for rows.Next() {
+			err = rows.Scan(&id, &name)
+			if err != nil {
+				error_msg = "执行查询失败，详情：" + err.Error()
+				write_log("Error", error_msg)
+				return
+			}
+			error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
+			write_log("Log", error_msg)
+		}
+	}
 }
 
 /*
@@ -34,12 +96,9 @@ func insertLine(conn *pgx.Conn, err error) {
 	var error_msg string
 	var sql string
 	var nickname string
-	condition1 := false
-	condition2 := false
-	condition3 := false
 
 	//插入数据
-	if condition1 {
+	if false {
 		sql = "insert into pgtest values('1','zhangsan'),('2','lisi');"
 		_, err = conn.Exec(sql)
 		if err != nil {
@@ -52,7 +111,7 @@ func insertLine(conn *pgx.Conn, err error) {
 	}
 
 	//绑定变量插入数据,不需要做防注入处理
-	if condition2 {
+	if false {
 		sql = "insert into pgtest values($1,$2),($3,$4);"
 		_, err = conn.Exec(sql, "3", "postgresql", "4", "postgres")
 		if err != nil {
@@ -65,7 +124,7 @@ func insertLine(conn *pgx.Conn, err error) {
 	}
 
 	//拼接sql 语句插入数据,需要做防注入处理
-	if condition3 {
+	if false {
 		nickname = "pg is good!"
 		sql = "insert into pgtest values('1','" + sql_data_encode(nickname) + "')"
 		_, err = conn.Exec(sql)
@@ -81,7 +140,7 @@ func insertLine(conn *pgx.Conn, err error) {
 
 // 替换字符串，n为替换次数，负数表示无限制
 func sql_data_encode(str string) string {
-	return strings.Replace(str, "pg", "sqli", -1)
+	return strings.Replace(str, "postgres", "postgresql", -1)
 }
 
 /*
