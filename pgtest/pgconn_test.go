@@ -38,12 +38,27 @@ func TestPgCreatetb(t *testing.T) {
 func TestPgInsertLine(t *testing.T) {
 	t.Parallel()
 
+	var id int32
 	conn, err := db_connect()
 	if err != nil {
 		t.Errorf("error连接数据库")
 	} //程序运行结束时关闭连接
 	insertLine(conn, err)
-	conn.Close()
+	defer conn.Close()
+
+	rows, err := conn.Query("select id from t where id = 100")
+	if err != nil {
+		t.Fatalf("conn.Query failed: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&id)
+
+	}
+	if id != 100 {
+		t.Error("Select called onDataRow wrong number of times")
+	}
 }
 
 func TestPgSelectLine(t *testing.T) {

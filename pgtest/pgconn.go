@@ -36,7 +36,7 @@ func selectTable(conn *pgx.Conn, err error, sql string) {
 	var name string
 	var id string
 
-	if true {
+	if false {
 		rows, err := conn.Query(sql)
 		if err != nil {
 			error_msg = "查询数据失败,详情：" + err.Error()
@@ -96,8 +96,8 @@ func insertLine(conn *pgx.Conn, err error) {
 	var nickname string
 
 	//插入数据
-	if false {
-		sql = "insert into pgtest values('1','zhangsan'),('2','lisi');"
+	if true {
+		sql = "insert into t values('100');"
 		_, err = conn.Exec(sql)
 		if err != nil {
 			error_msg = "插入数据失败,详情：" + err.Error()
