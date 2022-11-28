@@ -35,7 +35,6 @@ func selectTable(conn *pgx.Conn, err error, sql string) {
 	var error_msg string
 	var name string
 	var id string
-	var rowCount int32
 
 	if true {
 		rows, err := conn.Query(sql)
@@ -53,13 +52,8 @@ func selectTable(conn *pgx.Conn, err error, sql string) {
 				write_log("Error", error_msg)
 				return
 			}
-			//error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
-			rowCount++
-
-			//write_log("Log", error_msg)
-		}
-		if rowCount != 11 {
-			println("Select called onDataRow wrong number of times")
+			error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
+			write_log("Log", error_msg)
 		}
 		rows.Close()
 	}
