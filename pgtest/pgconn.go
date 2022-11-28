@@ -21,7 +21,7 @@ func main() {
 	write_log("Log", "连接数据库成功")
 	//ceateTable(conn, err)
 	//insertLine(conn, err)
-	//selectTable(conn, err)
+	selectTable(conn, err, "select id from pgtest")
 }
 
 /*
@@ -31,14 +31,13 @@ conn *pgx.Conn -- 连接信息
 err error --错误信息
 返回值说明：无
 */
-func selectTable(conn *pgx.Conn, err error) {
+func selectTable(conn *pgx.Conn, err error, sql string) {
 	var error_msg string
-	var sql string
 	var name string
 	var id string
+	var rowCount int32
 
-	if false {
-		sql = "SELECT id,name FROM pgtest LIMIT 2"
+	if true {
 		rows, err := conn.Query(sql)
 		if err != nil {
 			error_msg = "查询数据失败,详情：" + err.Error()
@@ -48,21 +47,26 @@ func selectTable(conn *pgx.Conn, err error) {
 			write_log("Log", "查询数据成功")
 		}
 		for rows.Next() {
-			err = rows.Scan(&id, &name)
+			err = rows.Scan(&id)
 			if err != nil {
 				error_msg = "执行查询失败，详情：" + err.Error()
 				write_log("Error", error_msg)
 				return
 			}
-			error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
-			write_log("Log", error_msg)
+			//error_msg = fmt.Sprintf("id：%s nickname：%s", id, name)
+			rowCount++
+
+			//write_log("Log", error_msg)
+		}
+		if rowCount != 11 {
+			println("Select called onDataRow wrong number of times")
 		}
 		rows.Close()
 	}
 
 	if false {
 		name = "postgres"
-		sql = "SELECT id,name FROM pgtest WHERE name ='" + sql_data_encode(name) + "' "
+		//sql = "SELECT id,name FROM pgtest WHERE name ='" + sql_data_encode(name) + "' "
 		rows, err := conn.Query(sql)
 		if err != nil {
 			error_msg = "查询数据失败,详情：" + err.Error()

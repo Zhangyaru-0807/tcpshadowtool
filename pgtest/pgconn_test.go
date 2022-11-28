@@ -13,7 +13,7 @@ func TestPgConnection(t *testing.T) {
 		t.Errorf("error连接数据库")
 	} //程序运行结束时关闭连接
 	defer conn.Close()
-	
+
 	var result int
 	err = conn.QueryRow("select 1 +1").Scan(&result)
 	if err != nil {
@@ -48,11 +48,34 @@ func TestPgInsertLine(t *testing.T) {
 
 func TestPgSelectLine(t *testing.T) {
 	t.Parallel()
+	var sum, rowCount int32
+	//var name string
 
+	//sql := "select * from t"
 	conn, err := db_connect()
 	if err != nil {
 		t.Errorf("error连接数据库")
 	} //程序运行结束时关闭连接
-	selectTable(conn, err)
-	conn.Close()
+
+	//selectTable(conn, err, sql)
+	defer conn.Close()
+
+	rows, err := conn.Query("select id from t")
+	if err != nil {
+		t.Fatalf("conn.Query failed: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int32
+		rows.Scan(&id)
+		sum += id
+		rowCount++
+	}
+	if rowCount != 7 {
+		t.Error("Select called onDataRow wrong number of times")
+	}
+	if sum != 29 {
+		t.Error("Wrong values returned")
+	}
 }
