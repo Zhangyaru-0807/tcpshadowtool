@@ -95,6 +95,14 @@ func (p *PgFortuneBackend) handleStartup() error {
 			return fmt.Errorf("error sending deny SSL request: %w", err)
 		}
 		return p.handleStartup()
+	case *pgproto3.SASLInitialResponse:
+		//buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
+		//buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		buf := (&pgproto3.AuthenticationSASLContinue{}).Encode(nil)
+		_, err = p.conn.Write(buf)
+		if err != nil {
+			return fmt.Errorf("error sending ready for query: %w", err)
+		}
 	default:
 		return fmt.Errorf("unknown startup message: %#v", startupMessage)
 	}
