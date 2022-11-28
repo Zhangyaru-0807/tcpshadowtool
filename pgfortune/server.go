@@ -103,6 +103,30 @@ func (p *PgFortuneBackend) handleStartup() error {
 		if err != nil {
 			return fmt.Errorf("error sending ready for query: %w", err)
 		}
+	case *pgproto3.SASLResponse:
+		//buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
+		//buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		buf := (&pgproto3.AuthenticationSASLFinal{}).Encode(nil)
+		buf = (&pgproto3.AuthenticationOk{}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"application_name", ""}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"client_encoding", "UTF8"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"DateStyle", "ISO, YMD"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"default_transaction_read_only", "off"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"in_hot_standby", "off"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"integer_datetimes", "on"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"IntervalStyle", "postgres"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"is_superuser", "on"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"server_encoding", "UTF8"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"server_version", "14.5"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"session_authorization", "postgres"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"standard_conforming_strings", "on"}).Encode(buf)
+		buf = (&pgproto3.ParameterStatus{"TimeZone", "Asia/Shanghai"}).Encode(buf)
+		buf = (&pgproto3.BackendKeyData{9920, 1678171750}).Encode(buf)
+		buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		_, err = p.conn.Write(buf)
+		if err != nil {
+			return fmt.Errorf("error sending ready for query: %w", err)
+		}
 	default:
 		return fmt.Errorf("unknown startup message: %#v", startupMessage)
 	}
