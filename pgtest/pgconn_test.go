@@ -32,7 +32,8 @@ func TestPgCreatetb(t *testing.T) {
 		t.Errorf("error连接数据库")
 	} //程序运行结束时关闭连接
 	ceateTable(conn, err)
-	conn.Close()
+	defer conn.Close()
+
 }
 
 func TestPgInsertLine(t *testing.T) {
@@ -57,7 +58,7 @@ func TestPgInsertLine(t *testing.T) {
 
 	}
 	if id != 100 {
-		t.Error("Select called onDataRow wrong number of times")
+		t.Error("Select called onDataRow wrong")
 	}
 }
 
