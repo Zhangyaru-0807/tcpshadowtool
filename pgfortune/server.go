@@ -28,6 +28,7 @@ func NewPgFortuneBackend(conn net.Conn, responder func() ([]byte, error)) *PgFor
 func (p *PgFortuneBackend) Run() error {
 	defer p.Close()
 
+	//启动
 	err := p.handleStartup()
 	if err != nil {
 		return err
@@ -81,8 +82,9 @@ func (p *PgFortuneBackend) handleStartup() error {
 
 	switch startupMessage.(type) {
 	case *pgproto3.StartupMessage:
-		buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
-		buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		//buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
+		//buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		buf := (&pgproto3.AuthenticationSASL{}).Encode(nil)
 		_, err = p.conn.Write(buf)
 		if err != nil {
 			return fmt.Errorf("error sending ready for query: %w", err)
