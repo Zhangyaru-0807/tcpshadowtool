@@ -47,22 +47,23 @@ func (p *PgFortuneBackend) Run() error {
 
 		switch msg.(type) {
 		case *pgproto3.Query:
-			response, err := p.responder()
+			response := [][]byte{[]byte("1")}
 			if err != nil {
 				return fmt.Errorf("error generating query response: %w", err)
 			}
 			buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
 				{
-					Name:                 []byte("fortune"),
-					TableOID:             0,
-					TableAttributeNumber: 0,
-					DataTypeOID:          25,
-					DataTypeSize:         -1,
+					Name:                 []byte("id"),
+					TableOID:             40963,
+					TableAttributeNumber: 1,
+					DataTypeOID:          23,
+					DataTypeSize:         4,
 					TypeModifier:         -1,
 					Format:               0,
 				},
 			}}).Encode(nil)
-			buf = (&pgproto3.DataRow{Values: [][]byte{response}}).Encode(buf)
+			buf = (&pgproto3.DataRow{Values: response}).Encode(buf)
+			//buf := (&pgproto3.NoData{}).Encode(nil)
 			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SELECT 1")}).Encode(buf)
 			buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
 			_, err = p.conn.Write(buf)
@@ -82,26 +83,27 @@ func (p *PgFortuneBackend) Run() error {
 				return fmt.Errorf("error writing bind response: %w", err)
 			}
 		case *pgproto3.Execute:
-			response, err := p.responder()
-			buf := (&pgproto3.DataRow{Values: [][]byte{response}}).Encode(nil)
-			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SET 1")}).Encode(buf)
+			response := [][]byte{[]byte("1")}
+			buf := (&pgproto3.DataRow{Values: response}).Encode(nil)
+			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SELECT 1")}).Encode(buf)
 			_, err = p.conn.Write(buf)
 			if err != nil {
 				return fmt.Errorf("error writing execute response: %w", err)
 			}
 		case *pgproto3.Describe:
 			//buf := (&pgproto3.ParameterDescription{}).Encode(nil)
-			buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
-				{
-					Name:                 []byte("id"),
-					TableOID:             40963,
-					TableAttributeNumber: 1,
-					DataTypeOID:          23,
-					DataTypeSize:         4,
-					TypeModifier:         -1,
-					Format:               0,
-				},
-			}}).Encode(nil)
+			//buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
+			//	{
+			//		Name:                 []byte("id"),
+			//		TableOID:             40963,
+			//		TableAttributeNumber: 1,
+			//		DataTypeOID:          23,
+			//		DataTypeSize:         4,
+			//		TypeModifier:         -1,
+			//		Format:               0,
+			//	},
+			//}}).Encode(nil)
+			buf := (&pgproto3.NoData{}).Encode(nil)
 			_, err = p.conn.Write(buf)
 			if err != nil {
 				return fmt.Errorf("error writing describe response: %w", err)
