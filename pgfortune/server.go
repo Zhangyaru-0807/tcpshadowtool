@@ -73,13 +73,13 @@ func (p *PgFortuneBackend) Run() error {
 			buf := (&pgproto3.ParseComplete{}).Encode(nil)
 			_, err = p.conn.Write(buf)
 			if err != nil {
-				return fmt.Errorf("error writing query response: %w", err)
+				return fmt.Errorf("error writing parse response: %w", err)
 			}
 		case *pgproto3.Bind:
 			buf := (&pgproto3.BindComplete{}).Encode(nil)
 			_, err = p.conn.Write(buf)
 			if err != nil {
-				return fmt.Errorf("error writing query response: %w", err)
+				return fmt.Errorf("error writing bind response: %w", err)
 			}
 		case *pgproto3.Execute:
 			response, err := p.responder()
@@ -87,7 +87,24 @@ func (p *PgFortuneBackend) Run() error {
 			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SET 1")}).Encode(buf)
 			_, err = p.conn.Write(buf)
 			if err != nil {
-				return fmt.Errorf("error writing query response: %w", err)
+				return fmt.Errorf("error writing execute response: %w", err)
+			}
+		case *pgproto3.Describe:
+			//buf := (&pgproto3.ParameterDescription{}).Encode(nil)
+			buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
+				{
+					Name:                 []byte("id"),
+					TableOID:             40963,
+					TableAttributeNumber: 1,
+					DataTypeOID:          23,
+					DataTypeSize:         4,
+					TypeModifier:         -1,
+					Format:               0,
+				},
+			}}).Encode(nil)
+			_, err = p.conn.Write(buf)
+			if err != nil {
+				return fmt.Errorf("error writing describe response: %w", err)
 			}
 		case *pgproto3.Sync:
 			buf := (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(nil)
