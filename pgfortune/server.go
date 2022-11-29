@@ -81,6 +81,14 @@ func (p *PgFortuneBackend) Run() error {
 			if err != nil {
 				return fmt.Errorf("error writing query response: %w", err)
 			}
+		case *pgproto3.Execute:
+			response, err := p.responder()
+			buf := (&pgproto3.DataRow{Values: [][]byte{response}}).Encode(nil)
+			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SET 1")}).Encode(buf)
+			_, err = p.conn.Write(buf)
+			if err != nil {
+				return fmt.Errorf("error writing query response: %w", err)
+			}
 		case *pgproto3.Terminate:
 			return nil
 		default:
