@@ -87,21 +87,25 @@ func (p *PgFortuneBackend) handleStartup() error {
 		buf := (&pgproto3.AuthenticationSASL{AuthMechanisms: auth}).Encode(nil)
 		_, err = p.conn.Write(buf)
 		if err != nil {
-			return fmt.Errorf("error sending ready for query: %w", err)
+			return fmt.Errorf("error sending AuthenticationSASL: %w", err)
 		}
 	case *pgproto3.SSLRequest:
 		_, err = p.conn.Write([]byte("N"))
 		if err != nil {
-			return fmt.Errorf("error sending deny SSL request: %w", err)
+			return fmt.Errorf("error sending SSLRequest: %w", err)
 		}
 		return p.handleStartup()
-	case *pgproto3.SASLInitialResponse:
-		//buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
-		//buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+	case *pgproto3.PasswordMessage:
 		buf := (&pgproto3.AuthenticationSASLContinue{}).Encode(nil)
 		_, err = p.conn.Write(buf)
 		if err != nil {
-			return fmt.Errorf("error sending ready for query: %w", err)
+			return fmt.Errorf("error sending SASL Continue: %w", err)
+		}
+	case *pgproto3.SASLInitialResponse:
+		buf := (&pgproto3.AuthenticationSASLContinue{}).Encode(nil)
+		_, err = p.conn.Write(buf)
+		if err != nil {
+			return fmt.Errorf("error sending Initial Response: %w", err)
 		}
 	case *pgproto3.SASLResponse:
 		parameter := map[string]string{
