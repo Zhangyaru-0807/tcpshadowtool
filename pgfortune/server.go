@@ -104,23 +104,26 @@ func (p *PgFortuneBackend) handleStartup() error {
 			return fmt.Errorf("error sending ready for query: %w", err)
 		}
 	case *pgproto3.SASLResponse:
-		//buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
-		//buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		parameter := map[string]string{
+			"client_encoding":               "UTF8",
+			"DateStyle":                     "ISO, YMD",
+			"default_transaction_read_only": "off",
+			"in_hot_standby":                "off",
+			"integer_datetimes":             "on",
+			"IntervalStyle":                 "postgres",
+			"is_superuser":                  "on",
+			"server_encoding":               "UTF8",
+			"server_version":                "14.5",
+			"session_authorization":         "postgres",
+			"standard_conforming_strings":   "on",
+			"TimeZone":                      "Asia/Shanghai",
+		}
 		buf := (&pgproto3.AuthenticationSASLFinal{}).Encode(nil)
 		buf = (&pgproto3.AuthenticationOk{}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "application_name"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "client_encoding", Value: "UTF8"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "DateStyle", Value: "ISO, YMD"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "default_transaction_read_only", Value: "off"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "in_hot_standby", Value: "off"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "integer_datetimes", Value: "on"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "IntervalStyle", Value: "postgres"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "is_superuser", Value: "on"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "server_encoding", Value: "UTF8"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "server_version", Value: "14.5"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "session_authorization", Value: "postgres"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "standard_conforming_strings", Value: "on"}).Encode(buf)
-		buf = (&pgproto3.ParameterStatus{Name: "TimeZone", Value: "Asia/Shanghai"}).Encode(buf)
+		for k, v := range parameter {
+			parameterStatus := &pgproto3.ParameterStatus{Name: k, Value: v}
+			buf = (parameterStatus).Encode(buf)
+		}
 		buf = (&pgproto3.BackendKeyData{ProcessID: 9920, SecretKey: 1678171750}).Encode(buf)
 		buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
 		_, err = p.conn.Write(buf)
