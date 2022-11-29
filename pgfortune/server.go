@@ -69,6 +69,12 @@ func (p *PgFortuneBackend) Run() error {
 			if err != nil {
 				return fmt.Errorf("error writing query response: %w", err)
 			}
+		case *pgproto3.Parse:
+			buf := (&pgproto3.ParseComplete{}).Encode(nil)
+			_, err = p.conn.Write(buf)
+			if err != nil {
+				return fmt.Errorf("error writing query response: %w", err)
+			}
 		case *pgproto3.Terminate:
 			return nil
 		default:
