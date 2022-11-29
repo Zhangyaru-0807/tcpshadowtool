@@ -46,7 +46,6 @@ func (p *PgFortuneBackend) Run() error {
 			if err != nil {
 				return fmt.Errorf("error generating query response: %w", err)
 			}
-
 			buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
 				{
 					Name:                 []byte("fortune"),
@@ -65,6 +64,13 @@ func (p *PgFortuneBackend) Run() error {
 			if err != nil {
 				return fmt.Errorf("error writing query response: %w", err)
 			}
+		//case *pgproto3.PasswordMessage:
+		//	buf := (&pgproto3.AuthenticationSASLContinue{Data: SASLData}).Encode(nil)
+		//	_, err = p.conn.Write(buf)
+		//	if err != nil {
+		//		return fmt.Errorf("error sending SASL Continue: %w", err)
+		//	}
+		//
 		case *pgproto3.Terminate:
 			return nil
 		default:
@@ -79,35 +85,10 @@ func (p *PgFortuneBackend) handleStartup() error {
 	if err != nil {
 		return fmt.Errorf("error receiving startup message: %w", err)
 	}
-
-	var auth []string
-	auth = append(auth, "SCRAM-SHA-256")
+	//var auth []string
+	//auth = append(auth, "SCRAM-SHA-256")
 	switch startupMessage.(type) {
 	case *pgproto3.StartupMessage:
-		buf := (&pgproto3.AuthenticationSASL{AuthMechanisms: auth}).Encode(nil)
-		_, err = p.conn.Write(buf)
-		if err != nil {
-			return fmt.Errorf("error sending AuthenticationSASL: %w", err)
-		}
-	case *pgproto3.SSLRequest:
-		_, err = p.conn.Write([]byte("N"))
-		if err != nil {
-			return fmt.Errorf("error sending SSLRequest: %w", err)
-		}
-		return p.handleStartup()
-	case *pgproto3.PasswordMessage:
-		buf := (&pgproto3.AuthenticationSASLContinue{}).Encode(nil)
-		_, err = p.conn.Write(buf)
-		if err != nil {
-			return fmt.Errorf("error sending SASL Continue: %w", err)
-		}
-	case *pgproto3.SASLInitialResponse:
-		buf := (&pgproto3.AuthenticationSASLContinue{}).Encode(nil)
-		_, err = p.conn.Write(buf)
-		if err != nil {
-			return fmt.Errorf("error sending Initial Response: %w", err)
-		}
-	case *pgproto3.SASLResponse:
 		parameter := map[string]string{
 			"client_encoding":               "UTF8",
 			"DateStyle":                     "ISO, YMD",
@@ -122,7 +103,7 @@ func (p *PgFortuneBackend) handleStartup() error {
 			"standard_conforming_strings":   "on",
 			"TimeZone":                      "Asia/Shanghai",
 		}
-		buf := (&pgproto3.AuthenticationSASLFinal{}).Encode(nil)
+		buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
 		buf = (&pgproto3.AuthenticationOk{}).Encode(buf)
 		for k, v := range parameter {
 			parameterStatus := &pgproto3.ParameterStatus{Name: k, Value: v}
@@ -134,6 +115,12 @@ func (p *PgFortuneBackend) handleStartup() error {
 		if err != nil {
 			return fmt.Errorf("error sending ready for query: %w", err)
 		}
+	case *pgproto3.SSLRequest:
+		_, err = p.conn.Write([]byte("N"))
+		if err != nil {
+			return fmt.Errorf("error sending SSLRequest: %w", err)
+		}
+		return p.handleStartup()
 	default:
 		return fmt.Errorf("unknown startup message: %#v", startupMessage)
 	}
