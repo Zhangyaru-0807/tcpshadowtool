@@ -26,7 +26,12 @@ func NewPgFortuneBackend(conn net.Conn, responder func() ([]byte, error)) *PgFor
 }
 
 func (p *PgFortuneBackend) Run() error {
-	defer p.Close()
+	defer func(p *PgFortuneBackend) {
+		err := p.Close()
+		if err != nil {
+			return
+		}
+	}(p)
 
 	//启动
 	err := p.handleStartup()
@@ -64,13 +69,6 @@ func (p *PgFortuneBackend) Run() error {
 			if err != nil {
 				return fmt.Errorf("error writing query response: %w", err)
 			}
-		//case *pgproto3.PasswordMessage:
-		//	buf := (&pgproto3.AuthenticationSASLContinue{Data: SASLData}).Encode(nil)
-		//	_, err = p.conn.Write(buf)
-		//	if err != nil {
-		//		return fmt.Errorf("error sending SASL Continue: %w", err)
-		//	}
-		//
 		case *pgproto3.Terminate:
 			return nil
 		default:
@@ -85,8 +83,6 @@ func (p *PgFortuneBackend) handleStartup() error {
 	if err != nil {
 		return fmt.Errorf("error receiving startup message: %w", err)
 	}
-	//var auth []string
-	//auth = append(auth, "SCRAM-SHA-256")
 	switch startupMessage.(type) {
 	case *pgproto3.StartupMessage:
 		parameter := map[string]string{
@@ -104,7 +100,6 @@ func (p *PgFortuneBackend) handleStartup() error {
 			"TimeZone":                      "Asia/Shanghai",
 		}
 		buf := (&pgproto3.AuthenticationOk{}).Encode(nil)
-		buf = (&pgproto3.AuthenticationOk{}).Encode(buf)
 		for k, v := range parameter {
 			parameterStatus := &pgproto3.ParameterStatus{Name: k, Value: v}
 			buf = (parameterStatus).Encode(buf)
