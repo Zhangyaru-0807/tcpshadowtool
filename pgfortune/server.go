@@ -152,7 +152,6 @@ func (p *PgFortuneBackend) handleStartup() error {
 		}
 		buf = (&pgproto3.BackendKeyData{ProcessID: 9920, SecretKey: 1678171750}).Encode(buf)
 		buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
-		var _ int
 		_, err = p.conn.Write(buf)
 		if err != nil {
 			return fmt.Errorf("error sending ready for query: %w", err)
