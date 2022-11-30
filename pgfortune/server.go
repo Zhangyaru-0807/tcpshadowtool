@@ -92,18 +92,18 @@ func (p *PgFortuneBackend) Run() error {
 			}
 		case *pgproto3.Describe:
 			//buf := (&pgproto3.ParameterDescription{}).Encode(nil)
-			//buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
-			//	{
-			//		Name:                 []byte("id"),
-			//		TableOID:             40963,
-			//		TableAttributeNumber: 1,
-			//		DataTypeOID:          23,
-			//		DataTypeSize:         4,
-			//		TypeModifier:         -1,
-			//		Format:               0,
-			//	},
-			//}}).Encode(nil)
-			buf := (&pgproto3.NoData{}).Encode(nil)
+			buf := (&pgproto3.RowDescription{Fields: []pgproto3.FieldDescription{
+				{
+					Name:                 []byte("id"),
+					TableOID:             40963,
+					TableAttributeNumber: 1,
+					DataTypeOID:          23,
+					DataTypeSize:         4,
+					TypeModifier:         -1,
+					Format:               0,
+				},
+			}}).Encode(nil)
+			//buf := (&pgproto3.NoData{}).Encode(nil)
 			_, err = p.conn.Write(buf)
 			if err != nil {
 				return fmt.Errorf("error writing describe response: %w", err)

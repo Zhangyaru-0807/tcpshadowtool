@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,11 @@ var options struct {
 	responseCommand string
 }
 
+type ClientConn struct {
+	rb *bufio.Reader
+	c  net.Conn
+}
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage:  %s [options]\n", os.Args[0])
@@ -25,7 +31,7 @@ func main() {
 	flag.StringVar(&options.responseCommand, "response-command", "fortune | cowsay -f elephant", "Command to execute to generate query response")
 	flag.Parse()
 
-	//net.listen是客户端的一种监听方法，是构建客户端请求的必要之路
+	//net.listen是客户端的一种监听方法
 	ln, err := net.Listen("tcp", options.listenAddress)
 	if err != nil {
 		log.Fatal(err)
