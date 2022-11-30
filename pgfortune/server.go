@@ -40,12 +40,13 @@ func (p *PgFortuneBackend) Run() error {
 	}
 
 	for {
-		msg, err := p.backend.Receive()
+		Msg, err := p.backend.Receive()
 		if err != nil {
 			return fmt.Errorf("error receiving message: %w", err)
 		}
 
-		switch msg.(type) {
+		switch Msg.(type) {
+
 		case *pgproto3.Query:
 			response := [][]byte{[]byte("1")}
 			if err != nil {
@@ -117,7 +118,7 @@ func (p *PgFortuneBackend) Run() error {
 		case *pgproto3.Terminate:
 			return nil
 		default:
-			return fmt.Errorf("received message other than Query from client: %#v", msg)
+			return fmt.Errorf("received message other than Query from client: %#v", Msg)
 		}
 	}
 }
@@ -151,6 +152,7 @@ func (p *PgFortuneBackend) handleStartup() error {
 		}
 		buf = (&pgproto3.BackendKeyData{ProcessID: 9920, SecretKey: 1678171750}).Encode(buf)
 		buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)
+		var _ int
 		_, err = p.conn.Write(buf)
 		if err != nil {
 			return fmt.Errorf("error sending ready for query: %w", err)
