@@ -9,7 +9,7 @@ import (
 
 func main() {
 	/** pg数据库链接测试**/
-	urlExample := "postgres://root:111111@127.0.0.1:15432/postgres?sslmode=disable"
+	urlExample := "postgres://root:111111@127.0.0.1:5432/postgres?sslmode=disable"
 	conn, err := pgx.Connect(context.Background(), urlExample)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
