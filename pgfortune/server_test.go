@@ -132,3 +132,56 @@ func TestPgQuery(t *testing.T) {
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
 }
+
+func TestPgBridge(t *testing.T) {
+	assert := assert.New(t)
+	write, err := net.Dial("tcp", ":11033")
+	assert.Nil(err)
+	conn, err := net.Dial("tcp", ":11088")
+	assert.Nil(err)
+	startupmesage := &pgproto3.StartupMessage{
+		ProtocolVersion: 196608,
+		Parameters: map[string]string{
+			"DateStyle":          "ISO",
+			"TimeZone":           "Asia/Shanghai",
+			"client_encoding":    "UTF8",
+			"database":           "postgres",
+			"extra_float_digits": "2",
+			"user":               "postgres",
+		},
+	}
+	start := startupmesage.Encode(nil)
+	//query := &pgproto3.Query{String: "selet * from test"}
+	//q := query.Encode(nil)
+	backend := &PgFortuneBackend{
+		backend: pgproto3.NewBackend(write, write), //io.reader和io.writer
+		conn:    write,
+		responder: func() ([]byte, error) {
+			return exec.Command("sh", "", options.responseCommand).CombinedOutput()
+		},
+	}
+
+	go func() {
+		err = backend.Run()
+		if err != nil {
+			t.Error("出错了")
+		}
+	}()
+	func() {
+		_, err := conn.Write(start)
+		if err != nil {
+			t.Error("出错了")
+		}
+	}()
+	buff := make([]byte, 16384)  //创建buffer
+	buf := bytes.NewBuffer(buff) //初始化buffer
+	_, err = conn.Read(buf.Bytes())
+	assert.Nil(err)
+	front := pgproto3.NewFrontend(buf, nil)
+	msg, err := front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ParameterStatus{}, msg)
+}
