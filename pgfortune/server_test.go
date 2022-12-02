@@ -2,12 +2,11 @@ package main
 
 import (
 	"bytes"
+	"github.com/jackc/pgx/v5/pgproto3"
+	"github.com/stretchr/testify/assert"
 	"net"
 	"os/exec"
 	"testing"
-
-	"github.com/jackc/pgx/v5/pgproto3"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPgBridge(t *testing.T) {
@@ -264,7 +263,7 @@ func TestPgParse(t *testing.T) {
 func TestPgPBDES(t *testing.T) {
 	assert := assert.New(t)
 	conn, write := net.Pipe()
-	startupmesage := &pgproto3.StartupMessage{
+	startupmesage := (&pgproto3.StartupMessage{
 		ProtocolVersion: 196608,
 		Parameters: map[string]string{
 			"DateStyle":          "ISO",
@@ -274,34 +273,29 @@ func TestPgPBDES(t *testing.T) {
 			"extra_float_digits": "2",
 			"user":               "postgres",
 		},
-	}
-	start := startupmesage.Encode(nil)
-	parse := &pgproto3.Parse{
+	}).Encode(nil)
+	buffer := (&pgproto3.Parse{
 		Name:          "",
 		Query:         "selet * from test",
 		ParameterOIDs: nil,
-	}
-	p := parse.Encode(nil)
-	bind := &pgproto3.Bind{
+	}).Encode(nil)
+	buffer = (&pgproto3.Bind{
 		DestinationPortal:    "",
 		PreparedStatement:    "",
 		ParameterFormatCodes: nil,
 		Parameters:           nil,
 		ResultFormatCodes:    nil,
-	}
-	p = bind.Encode(p)
-	describe := &pgproto3.Describe{
+	}).Encode(buffer)
+	buffer = (&pgproto3.Describe{
 		ObjectType: 'P',
 		Name:       "",
-	}
-	p = describe.Encode(p)
-	execute := &pgproto3.Execute{
+	}).Encode(buffer)
+	buffer = (&pgproto3.Execute{
 		Portal:  "",
 		MaxRows: 0,
-	}
-	p = execute.Encode(p)
-	sync := &pgproto3.Sync{}
-	p = sync.Encode(p)
+	}).Encode(buffer)
+	buffer = (&pgproto3.Sync{}).Encode(buffer)
+
 	backend := &PgFortuneBackend{
 		backend: pgproto3.NewBackend(write, write), //io.reader和io.writer
 		conn:    write,
@@ -309,6 +303,7 @@ func TestPgPBDES(t *testing.T) {
 			return exec.Command("sh", "", options.responseCommand).CombinedOutput()
 		},
 	}
+
 	go func() {
 		err := backend.Run()
 		if err != nil {
@@ -316,39 +311,44 @@ func TestPgPBDES(t *testing.T) {
 		}
 	}()
 	func() {
-		_, err := conn.Write(start)
+		_, err := conn.Write(startupmesage)
 		if err != nil {
 			t.Error("出错了")
 		}
 	}()
-	buff := make([]byte, 16384)  //创建buffer
-	buf := bytes.NewBuffer(buff) //初始化buffer
-	_, err := conn.Read(buf.Bytes())
-	assert.Nil(err)
-	front := pgproto3.NewFrontend(buf, nil)
+	//buff := make([]byte, 16384)  //创建buffer
+	//buf := bytes.NewBuffer(buff) //初始化buffer
+	//_, err := conn.Read(buf.Bytes())
+	//assert.Nil(err)
+	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
+	for i := 1; i < 13; i++ {
+		msg, err = front.Receive()
+		assert.Nil(err)
+		assert.IsType(&pgproto3.ParameterStatus{}, msg)
+	}
 	msg, err = front.Receive()
 	assert.Nil(err)
-	assert.IsType(&pgproto3.ParameterStatus{}, msg)
+	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
 
 	func() {
-		_, err := conn.Write(p)
+		_, err := conn.Write(buffer)
 		if err != nil {
 			t.Error("出错了")
 		}
 	}()
-	_, err = conn.Read(buf.Bytes())
-	assert.Nil(err)
-	front = pgproto3.NewFrontend(buf, nil)
+	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ParseComplete{}, msg)
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.BindComplete{}, msg)
-
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.RowDescription{}, msg)
