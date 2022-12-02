@@ -235,9 +235,17 @@ func TestPgParse(t *testing.T) {
 	msg, err := front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
+	for i := 1; i < 13; i++ {
+		msg, err = front.Receive()
+		assert.Nil(err)
+		assert.IsType(&pgproto3.ParameterStatus{}, msg)
+	}
 	msg, err = front.Receive()
 	assert.Nil(err)
-	assert.IsType(&pgproto3.ParameterStatus{}, msg)
+	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
 
 	func() {
 		_, err := conn.Write(p)
