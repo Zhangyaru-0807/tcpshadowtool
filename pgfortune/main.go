@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -13,11 +12,6 @@ import (
 var options struct {
 	listenAddress   string
 	responseCommand string
-}
-
-type ClientConn struct {
-	rb *bufio.Reader
-	c  net.Conn
 }
 
 func main() {

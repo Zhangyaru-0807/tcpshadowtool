@@ -43,6 +43,9 @@ func TestPgBridge(t *testing.T) {
 	assert.IsType(&pgproto3.ParameterStatus{}, msg)
 	msg, err = front.Receive()
 	assert.Nil(err)
+	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
 }
 
@@ -239,6 +242,7 @@ func TestPgParse(t *testing.T) {
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ParseComplete{}, msg)
 }
+
 func TestPgPBDES(t *testing.T) {
 	assert := assert.New(t)
 	conn, write := net.Pipe()
