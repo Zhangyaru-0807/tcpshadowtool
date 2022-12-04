@@ -1,0 +1,5 @@
+package bridgetoolpackage
+
+func Run() {
+
+}

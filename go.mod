@@ -7,6 +7,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/jackc/pgx/v5 v5.1.1
 	github.com/stretchr/testify v1.8.1
+	github.com/zhuangsirui/binpacker v2.0.0+incompatible
 )
 
 require (
