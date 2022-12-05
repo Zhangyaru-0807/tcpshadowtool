@@ -191,6 +191,48 @@ func TestBridge(t *testing.T) {
 	assert.Nil(err)
 	_, err = backend.Write(prepare)
 
+	conntion, err = listener.Accept()
+	assert.Nil(err)
+	reader = NewReader(conntion)
+	reader.Read(buff)
+	readseeker = bytes.NewReader(buff)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.Nil(err)
+	msgg = msgs[:2]
+	assert.IsType(&SqliID{}, msgg)
+	msgg = msgs[2:3]
+	assert.IsType(&SqliCIdescribe{}, msgg)
+	msgg = msgs[3:4]
+	assert.IsType(&SqliEot{}, msgg)
+
+	idescribe, err := (&SqliIdescribe{
+		inputfields: 2,
+		fields: []Sqlifields{{
+			Type:                 2,
+			ExtendID:             0,
+			OwnerNameLength:      0,
+			ExtendTypeNameLength: 0,
+			PassByReferenceFlag:  0,
+			alignment:            0,
+			SourceType:           0,
+			Length:               4,
+		}, {
+			Type:                 2,
+			ExtendID:             0,
+			OwnerNameLength:      0,
+			ExtendTypeNameLength: 0,
+			PassByReferenceFlag:  0,
+			alignment:            0,
+			SourceType:           0,
+			Length:               4,
+		},
+		},
+	}).Pack()
+	assert.Nil(err)
+	idescribe, err = (&SqliEot{}).Pack()
+	assert.Nil(err)
+	_, err = backend.Write(idescribe)
+
 	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
 	assert.Nil(err)
