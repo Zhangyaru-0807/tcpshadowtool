@@ -255,6 +255,40 @@ func TestBridge(t *testing.T) {
 	assert.Nil(err)
 	_, err = backend.Write(open)
 
+	//conntion, err = listener.Accept()
+	//assert.Nil(err)
+	//reader = NewReader(conntion)
+	//reader.Read(buff)
+	//readseeker = bytes.NewReader(buff)
+	//msgs, err = UnpackSqliTransmission(readseeker)
+	//assert.Nil(err)
+	//msgg = msgs[:2]
+	//assert.IsType(&SqliID{}, msgg)
+	//msgg = msgs[2:3]
+	//assert.IsType(&SqliBind{}, msgg)
+	//msgg = msgs[3:4]
+	//assert.IsType(&SqliExecute{}, msgg)
+	//msgg = msgs[4:5]
+	//assert.IsType(&SqliEot{}, msgg)
+	//
+	//execute, err := (&SqliInsertDone{}).Pack()
+	//assert.Nil(err)
+	//execute, err = (&SqliDone{
+	//	Warning:  0,
+	//	Rows:     2,
+	//	RowID:    267,
+	//	SerialID: 0,
+	//}).Pack()
+	//assert.Nil(err)
+	//execute, err = (&SqliCost{
+	//	EstimatedRows: 1,
+	//	EstimatedIO:   2,
+	//}).Pack()
+	//assert.Nil(err)
+	//execute, err = (&SqliEot{}).Pack()
+	//assert.Nil(err)
+	//_, err = backend.Write(execute)
+
 	conntion, err = listener.Accept()
 	assert.Nil(err)
 	reader = NewReader(conntion)
