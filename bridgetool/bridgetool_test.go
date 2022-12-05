@@ -329,6 +329,24 @@ func TestBridge(t *testing.T) {
 	assert.Nil(err)
 	_, err = backend.Write(nfetch)
 
+	//conntion, err = listener.Accept()
+	//assert.Nil(err)
+	//reader = NewReader(conntion)
+	//reader.Read(buff)
+	//readseeker = bytes.NewReader(buff)
+	//msgs, err = UnpackSqliTransmission(readseeker)
+	//assert.Nil(err)
+	//msgg = msgs[:2]
+	//assert.IsType(&SqliID{}, msgg)
+	//msgg = msgs[2:3]
+	//assert.IsType(&SqliRelease{}, msgg)
+	//msgg = msgs[3:4]
+	//assert.IsType(&SqliEot{}, msgg)
+	//
+	//release, err := (&SqliEot{}).Pack()
+	//assert.Nil(err)
+	//_, err = backend.Write(release)
+
 	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
 	assert.Nil(err)
