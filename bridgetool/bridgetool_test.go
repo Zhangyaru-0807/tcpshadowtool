@@ -255,6 +255,46 @@ func TestBridge(t *testing.T) {
 	assert.Nil(err)
 	_, err = backend.Write(open)
 
+	conntion, err = listener.Accept()
+	assert.Nil(err)
+	reader = NewReader(conntion)
+	reader.Read(buff)
+	readseeker = bytes.NewReader(buff)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.Nil(err)
+	msgg = msgs[:2]
+	assert.IsType(&SqliID{}, msgg)
+	msgg = msgs[2:3]
+	assert.IsType(&SqliRetType{}, msgg)
+	msgg = msgs[3:4]
+	assert.IsType(&SqliNFetch{}, msgg)
+	msgg = msgs[4:5]
+	assert.IsType(&SqliEot{}, msgg)
+
+	nfetch, err := (&SqliTuple{
+		Warnings:   0,
+		size:       8,
+		tupleBytes: []byte{0, 0, 0, 2, 0, 0, 0, 222},
+		Values:     nil,
+		fields:     nil,
+	}).Pack()
+	assert.Nil(err)
+	nfetch, err = (&SqliDone{
+		Warning:  0,
+		Rows:     2,
+		RowID:    267,
+		SerialID: 0,
+	}).Pack()
+	assert.Nil(err)
+	nfetch, err = (&SqliCost{
+		EstimatedRows: 1,
+		EstimatedIO:   2,
+	}).Pack()
+	assert.Nil(err)
+	nfetch, err = (&SqliEot{}).Pack()
+	assert.Nil(err)
+	_, err = backend.Write(nfetch)
+
 	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
 	assert.Nil(err)
