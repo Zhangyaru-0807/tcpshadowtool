@@ -277,10 +277,7 @@ func TestPgPBDES(t *testing.T) {
 			t.Error("出错了")
 		}
 	}()
-	//buff := make([]byte, 16384)  //创建buffer
-	//buf := bytes.NewBuffer(buff) //初始化buffer
-	//_, err := conn.Read(buf.Bytes())
-	//assert.Nil(err)
+
 	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)

@@ -48,7 +48,14 @@ func TestBridge(t *testing.T) {
 	msgg := msgs[2:3]
 	assert.IsType(&SqliProtocols{}, msgg)
 	msgg = msgs[3:4]
-	assert.IsType(&SqliProtocols{}, msgg)
+	assert.IsType(&SqliEot{}, msgg)
+
+	backend, err := net.Dial("tcp4", address)
+	assert.Nil(err)
+	buf, err := (&SqliProtocols{Protocol: nil}).Pack()
+	assert.Nil(err)
+	buf, err = (&SqliEot{}).Pack()
+	_, err = backend.Write(buf)
 
 	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
@@ -60,6 +67,52 @@ func TestBridge(t *testing.T) {
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+
+	buffer := (&pgproto3.Parse{
+		Name:          "",
+		Query:         "selet * from test",
+		ParameterOIDs: nil,
+	}).Encode(nil)
+	buffer = (&pgproto3.Bind{
+		DestinationPortal:    "",
+		PreparedStatement:    "",
+		ParameterFormatCodes: nil,
+		Parameters:           nil,
+		ResultFormatCodes:    nil,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Describe{
+		ObjectType: 'P',
+		Name:       "",
+	}).Encode(buffer)
+	buffer = (&pgproto3.Execute{
+		Portal:  "",
+		MaxRows: 0,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Sync{}).Encode(buffer)
+	_, err = conn.Write(buffer)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	front = pgproto3.NewFrontend(conn, nil)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ParseComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.BindComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.RowDescription{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.DataRow{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.CommandComplete{}, msg)
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
