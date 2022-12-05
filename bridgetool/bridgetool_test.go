@@ -57,6 +57,33 @@ func TestBridge(t *testing.T) {
 	buf, err = (&SqliEot{}).Pack()
 	_, err = backend.Write(buf)
 
+	conntion, err = listener.Accept()
+	assert.Nil(err)
+	reader = NewReader(conntion)
+	reader.Read(buff)
+	readseeker = bytes.NewReader(buff)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.Nil(err)
+	msgg = msgs[:2]
+	assert.IsType(&SqliDBOpen{}, msgg)
+	msgg = msgs[2:3]
+	assert.IsType(&SqliEot{}, msgg)
+
+	dbopen, err := (&SqliDone{
+		Warning:  21,
+		Rows:     0,
+		RowID:    0,
+		SerialID: 0,
+	}).Pack()
+	assert.Nil(err)
+	dbopen, err = (&SqliCost{
+		EstimatedRows: 1,
+		EstimatedIO:   1,
+	}).Pack()
+	dbopen, err = (&SqliEot{}).Pack()
+	assert.Nil(err)
+	_, err = backend.Write(dbopen)
+
 	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)
@@ -96,6 +123,73 @@ func TestBridge(t *testing.T) {
 	if err != nil {
 		t.Error("出错了")
 	}
+
+	conntion, err = listener.Accept()
+	assert.Nil(err)
+	reader = NewReader(conntion)
+	reader.Read(buff)
+	readseeker = bytes.NewReader(buff)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.Nil(err)
+	msgg = msgs[:2]
+	assert.IsType(&SqliPrepare{}, msgg)
+	msgg = msgs[2:3]
+	assert.IsType(&SqliNDescribe{}, msgg)
+	msgg = msgs[3:4]
+	assert.IsType(&SqliWantDone{}, msgg)
+	msgg = msgs[4:5]
+	assert.IsType(&SqliEot{}, msgg)
+
+	prepare, err := (&SqliDescribe{
+		StatementType: 2,
+		StatementID:   0,
+		EstimatedCost: 0,
+		TupleSize:     8,
+		CountOfFields: 2,
+		StringTable:   8,
+		Fields: []SqliField{{
+			FieldIndex:              0,
+			ColumnStartPos:          0,
+			ColumnType:              2,
+			ColumnExtendedBuiltinId: 0,
+			OwnerName:               "",
+			ExtendedName:            "",
+			Reference:               0,
+			Alignment:               0,
+			SourceType:              0,
+			Length:                  4,
+			Name:                    "id",
+		}, {
+			FieldIndex:              3,
+			ColumnStartPos:          4,
+			ColumnType:              2,
+			ColumnExtendedBuiltinId: 0,
+			OwnerName:               "",
+			ExtendedName:            "",
+			Reference:               0,
+			Alignment:               0,
+			SourceType:              0,
+			Length:                  4,
+			Name:                    "code",
+		},
+		},
+	}).Pack()
+	assert.Nil(err)
+	prepare, err = (&SqliDone{
+		Warning:  0,
+		Rows:     0,
+		RowID:    0,
+		SerialID: 0,
+	}).Pack()
+	assert.Nil(err)
+	prepare, err = (&SqliCost{
+		EstimatedRows: 1,
+		EstimatedIO:   2,
+	}).Pack()
+	assert.Nil(err)
+	prepare, err = (&SqliEot{}).Pack()
+	assert.Nil(err)
+	_, err = backend.Write(prepare)
 
 	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
