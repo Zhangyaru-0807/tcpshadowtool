@@ -13,7 +13,7 @@ func TestBridgeOpen(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
 	assert.Nil(err)
-	startupmesage := &pgproto3.StartupMessage{
+	startupmessage := &pgproto3.StartupMessage{
 		ProtocolVersion: 196608,
 		Parameters: map[string]string{
 			"DateStyle":          "ISO",
@@ -24,7 +24,7 @@ func TestBridgeOpen(t *testing.T) {
 			"user":               "postgres",
 		},
 	}
-	start := startupmesage.Encode(nil)
+	start := startupmessage.Encode(nil)
 	_, err = conn.Write(start)
 	if err != nil {
 		t.Error("出错了")
