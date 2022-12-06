@@ -195,6 +195,59 @@ func TestBridgeBind(t *testing.T) {
 	assert.IsType(&pgproto3.BindComplete{}, msg)
 }
 
+func TestBridgeOpen(t *testing.T) {
+	assert := assert.New(t)
+	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
+	assert.Nil(err)
+	startupmesage := &pgproto3.StartupMessage{
+		ProtocolVersion: 196608,
+		Parameters: map[string]string{
+			"DateStyle":          "ISO",
+			"TimeZone":           "Asia/Shanghai",
+			"client_encoding":    "UTF8",
+			"database":           "postgres",
+			"extra_float_digits": "2",
+			"user":               "postgres",
+		},
+	}
+	start := startupmesage.Encode(nil)
+	_, err = conn.Write(start)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	front := pgproto3.NewFrontend(conn, nil)
+	msg, err := front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ParameterStatus{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+
+	buffer := (&pgproto3.Describe{
+		ObjectType: 'P',
+		Name:       "",
+	}).Encode(nil)
+	_, err = conn.Write(buffer)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	front = pgproto3.NewFrontend(conn, nil)
+	//msg, err = front.Receive()
+	//assert.Nil(err)
+	//assert.IsType(&pgproto3.NoData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.RowDescription{}, msg)
+}
+
 func TestBridgeNOpen(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
