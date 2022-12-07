@@ -339,6 +339,8 @@ func (au *AuthResponse) Unpack(r io.Reader) error {
 		unpacker.FetchUint16(&c.noname26)
 		unpacker.FetchUint16(&c.noname27)
 	}
+
+	return unpacker.Error()
 }
 
 type Context struct {
