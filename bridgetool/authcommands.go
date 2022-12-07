@@ -11,6 +11,8 @@ type AuthCommand interface {
 	Pack() ([]byte, error)
 	Unpack(r io.Reader) error
 }
+
+// request
 type AuthRequest struct {
 	header []Header
 	body   []Body
@@ -260,4 +262,77 @@ type Body struct {
 	asceot                uint16
 }
 
-//request
+// response
+type AuthResponse struct {
+	length  uint16
+	context []Context
+}
+
+func (au *AuthResponse) Pack() ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	packer := binpacker.NewPacker(binary.BigEndian, buffer)
+	packer.PushUint16(au.length)
+	for _, c := range au.context {
+		packer.PushByte(c.noname1)
+		packer.PushUint16(c.noname2)
+		packer.PushByte(c.noname222)
+		packer.PushUint16(c.noname3)
+		packer.PushUint16(c.noname4)
+		packer.PushUint32(c.noname5)
+		packer.PushUint16(c.noname6)
+		packer.PushUint16(c.noname7)
+		packer.PushBytes([]byte(c.noname8))
+		packer.PushUint16(c.noname9)
+		packer.PushBytes([]byte(c.noname10))
+		packer.PushUint16(c.noname11)
+		packer.PushBytes([]byte(c.noname12))
+		packer.PushUint16(c.noname13)
+		packer.PushBytes([]byte(c.noname14))
+		packer.PushUint32(c.noname15)
+		packer.PushUint32(c.noname16)
+		packer.PushUint32(c.noname17)
+		packer.PushUint16(c.noname18)
+		packer.PushUint16(c.noname19)
+		packer.PushUint16(c.noname20)
+		packer.PushBytes([]byte(c.noname21))
+		packer.PushUint16(c.noname22)
+		packer.PushBytes([]byte(c.noname23))
+		packer.PushUint16(c.noname24)
+		packer.PushUint16(c.noname25)
+		packer.PushUint16(c.noname26)
+		packer.PushUint16(c.noname27)
+	}
+
+	return buffer.Bytes(), packer.Error()
+}
+
+type Context struct {
+	noname1   uint8
+	noname2   uint16
+	noname222 uint8
+	noname3   uint16
+	noname4   uint16
+	noname5   uint32
+	noname6   uint16
+	noname7   uint16
+	noname8   string
+	noname9   uint16
+	noname10  string
+	noname11  uint16
+	noname12  string
+	noname13  uint16
+	noname14  string
+	noname15  uint32
+	noname16  uint32
+	noname17  uint32
+	noname18  uint16
+	noname19  uint16
+	noname20  uint16
+	noname21  string
+	noname22  uint16
+	noname23  string
+	noname24  uint16
+	noname25  uint16
+	noname26  uint16
+	noname27  uint16
+}
