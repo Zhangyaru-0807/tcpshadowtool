@@ -306,6 +306,41 @@ func (au *AuthResponse) Pack() ([]byte, error) {
 	return buffer.Bytes(), packer.Error()
 }
 
+func (au *AuthResponse) Unpack(r io.Reader) error {
+	unpacker := binpacker.NewUnpacker(binary.BigEndian, r)
+	unpacker.FetchUint16(&au.length)
+	for _, c := range au.context {
+		unpacker.FetchByte(&c.noname1)
+		unpacker.FetchUint16(&c.noname2)
+		unpacker.FetchByte(&c.noname222)
+		unpacker.FetchUint16(&c.noname3)
+		unpacker.FetchUint16(&c.noname4)
+		unpacker.FetchUint32(&c.noname5)
+		unpacker.FetchUint16(&c.noname6)
+		unpacker.FetchUint16(&c.noname7)
+		unpacker.FetchString(12, &c.noname8)
+		unpacker.FetchUint16(&c.noname9)
+		unpacker.FetchString(32, &c.noname10)
+		unpacker.FetchUint16(&c.noname11)
+		unpacker.FetchString(35, &c.noname12)
+		unpacker.FetchUint16(&c.noname13)
+		unpacker.FetchString(18, &c.noname14)
+		unpacker.FetchUint32(&c.noname15)
+		unpacker.FetchUint32(&c.noname16)
+		unpacker.FetchUint32(&c.noname17)
+		unpacker.FetchUint16(&c.noname18)
+		unpacker.FetchUint16(&c.noname19)
+		unpacker.FetchUint16(&c.noname20)
+		unpacker.FetchString(24, &c.noname21)
+		unpacker.FetchUint16(&c.noname22)
+		unpacker.FetchString(6, &c.noname23)
+		unpacker.FetchUint16(&c.noname24)
+		unpacker.FetchUint16(&c.noname25)
+		unpacker.FetchUint16(&c.noname26)
+		unpacker.FetchUint16(&c.noname27)
+	}
+}
+
 type Context struct {
 	noname1   uint8
 	noname2   uint16
