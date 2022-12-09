@@ -1457,7 +1457,7 @@ func UnpackSqliCommand(reader io.ReadSeeker) (SqliCommand, error) {
 		reader.Seek(pos, io.SeekStart)
 		return nil, err
 	}
-
+	
 	switch cmd {
 	case SQ_COMMAND:
 		command := &SqliCmd{}

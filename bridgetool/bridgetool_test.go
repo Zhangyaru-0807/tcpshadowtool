@@ -2,6 +2,7 @@ package bridgetoolpackage
 
 import (
 	. "bufio"
+	"bytes"
 	"github.com/jackc/pgx/v5/pgproto3"
 	"github.com/stretchr/testify/assert"
 	"net"
@@ -231,16 +232,20 @@ func TestBridgeNOpen(t *testing.T) {
 		t.Error("出错了")
 	}
 
-	reader = NewReader(conntion)
-	buf := make([]byte, 16384)
-	reader.Read(buf)
+	buf := make([]byte, 32)
+	conntion.Read(buf)
 	assert.True(buf != nil)
-	//msgs, err := UnpackSqliCommand()
-	//assert.Nil(err)
-	//assert.IsType(&SqliPrepare{}, msgs[1:2])
-	//assert.IsType(&SqliNDescribe{}, msgs[2:3])
-	//assert.IsType(&SqliWantDone{}, msgs[3:4])
-	//assert.IsType(&SqliEot{}, msgs[4:5])
+	re := bytes.NewReader(buf)
+	t.Log(re.Len())
+	t.Log(buf[0:32])
+	t.Log(re)
+	msgs, err := UnpackSqliTransmission(re)
+	t.Log(msgs[0:4])
+	assert.Nil(err)
+	assert.IsType(&SqliPrepare{}, msgs[0])
+	assert.IsType(&SqliNDescribe{}, msgs[1])
+	assert.IsType(&SqliWantDone{}, msgs[2])
+	assert.IsType(&SqliEot{}, msgs[3])
 
 	describe := &SqliDescribe{
 		StatementType: 2,
@@ -403,4 +408,19 @@ func TestBridgeNOpen(t *testing.T) {
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+}
+
+func TestUnpack(t *testing.T) {
+	buf := make([]byte, 16384)
+	buf = []byte{0, 2, 0, 0, 0, 0, 0, 18, 115, 101, 108, 101, 99, 116, 32, 42, 32, 102, 114, 111, 109, 32, 116, 101, 115, 116, 0, 22, 0, 49, 0, 12}
+	t.Log(buf)
+	msgs := bytes.NewReader(buf)
+	t.Log(msgs)
+	t.Log(msgs.Len())
+	msgg, err := UnpackSqliTransmission(msgs)
+	assert.Nil(t, err)
+	t.Log(msgg[0])
+	t.Log(msgg[1])
+	t.Log(msgg[2])
+	t.Log(msgg[3])
 }
