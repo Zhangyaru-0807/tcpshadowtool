@@ -242,7 +242,7 @@ func TestBridgeNOpen(t *testing.T) {
 	//assert.IsType(&SqliWantDone{}, msgs[3:4])
 	//assert.IsType(&SqliEot{}, msgs[4:5])
 
-	prepare, err := (&SqliDescribe{
+	describe := &SqliDescribe{
 		StatementType: 2,
 		StatementID:   0,
 		EstimatedCost: 0,
@@ -275,23 +275,23 @@ func TestBridgeNOpen(t *testing.T) {
 			Name:                    "code",
 		},
 		},
-	}).Pack()
-	assert.Nil(err)
-	prepare, err = (&SqliDone{
+	}
+	done := &SqliDone{
 		Warning:  0,
 		Rows:     0,
 		RowID:    0,
 		SerialID: 0,
-	}).Pack()
-	assert.Nil(err)
-	prepare, err = (&SqliCost{
+	}
+	cost := &SqliCost{
 		EstimatedRows: 1,
 		EstimatedIO:   2,
-	}).Pack()
+	}
+	eot := &SqliEot{}
+	var transmission SqliTransmission
+	transmission = []SqliCommand{describe, done, cost, eot}
+	bufff, err := transmission.Pack()
 	assert.Nil(err)
-	prepare, err = (&SqliEot{}).Pack()
-	assert.Nil(err)
-	_, err = conntion.Write(prepare)
+	_, err = conntion.Write(bufff)
 
 	//reader = NewReader(conntion)
 	//reader.Read(buff)
