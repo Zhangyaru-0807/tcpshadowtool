@@ -287,3 +287,73 @@ func TestAuthResponse_Pack(t *testing.T) {
 		47, 122, 104, 97, 110, 103, 121, 97, 114, 117, 47, 103, 98, 97, 115, 101, 47, 98, 105, 110, 47, 111, 110, 105, 110, 105, 116, 0, 0, 127}
 	assert.Equal(t, buffer, pack)
 }
+
+func TestAuthResponse_Unpack(t *testing.T) {
+	buffer := []byte{1, 31, 2, 60, 16, 0, 0, 100, 0, 101, 0, 0, 0, 61, 0, 6, 73, 69, 69, 69, 73, 0, 0, 108, 115, 114, 118, 105, 110, 102, 120, 0, 0, 0, 0, 0, 0, 34, 71, 66, 97, 115, 101, 32, 83, 101, 114, 118,
+		101, 114, 32, 86, 101, 114, 115, 105, 111, 110, 32, 57, 46, 53, 54, 46, 70, 67, 52, 71, 49, 84, 76, 0, 0, 35, 83, 111, 102, 116, 119, 97, 114, 101, 32, 83, 101, 114, 105, 97, 108, 32, 78, 117, 109,
+		98, 101, 114, 32, 65, 65, 65, 35, 66, 48, 48, 48, 48, 48, 48, 0, 0, 12, 103, 98, 97, 115, 101, 115, 101, 114, 118, 101, 114, 0, 0, 0, 1, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 111, 110, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 61, 115, 111, 99, 116, 99, 112, 0, 0, 0, 0, 0, 0, 0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 107, 0, 0, 0, 0, 0, 0, 11, 142, 0, 0, 0, 0, 0, 3, 104, 52, 0, 0, 11, 47, 100, 101, 118, 47,
+		112, 116, 115, 47, 48, 0, 0, 15, 47, 104, 111, 109, 101, 47, 103, 98, 97, 115, 101, 100, 98, 116, 0, 0, 110, 0, 4, 0, 0, 0, 0, 0, 116, 0, 43, 0, 0, 3, 233, 0, 0, 3, 233, 0, 33, 47, 104, 111, 109, 101,
+		47, 122, 104, 97, 110, 103, 121, 97, 114, 117, 47, 103, 98, 97, 115, 101, 47, 98, 105, 110, 47, 111, 110, 105, 110, 105, 116, 0, 0, 127}
+	reader := bytes.NewReader(buffer)
+	t.Log(reader)
+	authresponse := &AuthResponse{}
+	t.Log(authresponse)
+	err := authresponse.Unpack(reader)
+	assert.Nil(t, err)
+	expect := &AuthResponse{
+		Length:           287,
+		Noname1:          2,
+		Noname2:          15376,
+		Noname3:          0,
+		Noname4:          100,
+		Noname5:          101,
+		Noname6:          61,
+		IEEEIlength:      6,
+		IEEEI:            "IEEEI",
+		Noname7:          108,
+		Srvinfx:          "srvinfx",
+		Versionlength:    34,
+		Version:          "GBase Server Version 9.56.FC4G1TL",
+		Softwarelength:   35,
+		Software:         "Software Serial Number AAA#B000000",
+		Clientnamelength: 12,
+		Clientname:       "gbaseserver",
+		Noname8:          316,
+		Noname9:          0,
+		Noname10:         0,
+		Noname11:         0,
+		Noname12:         0,
+		Noname13:         0,
+		Noname14:         "on",
+		Noname15:         "=soctcp",
+		Noname16:         102,
+		Noname17:         0,
+		Noname18:         0,
+		Noname19:         20,
+		Noname20:         0,
+		Noname21:         107,
+		Noname22:         2958,
+		Noname23:         872,
+		Noname24:         13312,
+		Path1length:      11,
+		Path1:            "/dev/pts/0",
+		Path2length:      15,
+		Path2:            "/home/gbasedbt",
+		Noname25:         110,
+		Noname26:         4,
+		Noname27:         0,
+		Noname28:         0,
+		Noname29:         116,
+		Noname30:         43,
+		Noname31:         0,
+		Noname32:         1001,
+		Noname33:         0,
+		Noname34:         1001,
+		Path3length:      33,
+		Path3:            "/home/zhangyaru/gbase/bin/oninit",
+		Asceot:           127,
+	}
+	t.Log(authresponse)
+	assert.Equal(t, authresponse, expect)
+}

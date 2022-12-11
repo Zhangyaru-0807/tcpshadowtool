@@ -427,7 +427,7 @@ func (au *AuthResponse) Unpack(r io.Reader) error {
 	unpacker.FetchByte(&pad)
 	unpacker.FetchUint16(&au.Noname7)
 	unpacker.FetchString(7, &au.Srvinfx)
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 5; i++ {
 		unpacker.FetchByte(&pad)
 	}
 	unpacker.FetchUint16(&au.Versionlength)
