@@ -102,6 +102,7 @@ func TestBridgeNOpen(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
 	assert.Nil(err)
+	front := pgproto3.NewFrontend(conn, nil)
 	startupmesage := &pgproto3.StartupMessage{
 		ProtocolVersion: 196608,
 		Parameters: map[string]string{
@@ -210,6 +211,7 @@ func TestBridgeNOpen(t *testing.T) {
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf = buff[:c]
+	t.Log(buf)
 	readseeker = bytes.NewReader(buf)
 	msgs, err = UnpackSqliTransmission(readseeker)
 	assert.IsType(&SqliInfo{}, msgs[0])
@@ -244,7 +246,7 @@ func TestBridgeNOpen(t *testing.T) {
 	_, err = conntion.Write(buf)
 	assert.Nil(err)
 
-	front := pgproto3.NewFrontend(conn, nil)
+	//front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
@@ -284,13 +286,12 @@ func TestBridgeNOpen(t *testing.T) {
 		t.Error("出错了")
 	}
 
-	buf = make([]byte, 16384)
-	b, err := conntion.Read(buf)
-	buff = buf[:b]
-	assert.True(buf != nil)
-	re := bytes.NewReader(buff)
+	c, err = reader.Read(buff)
+	buf = buff[:c]
+	re := bytes.NewReader(buf)
 	msgs, err = UnpackSqliTransmission(re)
 	assert.Nil(err)
+	t.Log(len(msgs))
 	assert.IsType(&SqliPrepare{}, msgs[0])
 	assert.IsType(&SqliNDescribe{}, msgs[1])
 	assert.IsType(&SqliWantDone{}, msgs[2])
@@ -345,93 +346,84 @@ func TestBridgeNOpen(t *testing.T) {
 	assert.Nil(err)
 	_, err = conntion.Write(bufff)
 
-	//reader = NewReader(conntion)
-	//reader.Read(buff)
-	//readseeker = bytes.NewReader(buff)
-	//msgs, err = UnpackSqliTransmission(readseeker)
-	//assert.Nil(err)
-	//msgg = msgs[:2]
-	//assert.IsType(&SqliID{}, msgg)
-	//msgg = msgs[2:3]
-	//assert.IsType(&SqliCIdescribe{}, msgg)
-	//msgg = msgs[3:4]
-	//assert.IsType(&SqliEot{}, msgg)
-	//
-	//idescribe, err := (&SqliIdescribe{
-	//	inputfields: 2,
-	//	fields: []Sqlifields{{
-	//		Type:                 2,
-	//		ExtendID:             0,
-	//		OwnerNameLength:      0,
-	//		ExtendTypeNameLength: 0,
-	//		PassByReferenceFlag:  0,
-	//		alignment:            0,
-	//		SourceType:           0,
-	//		Length:               4,
-	//	}, {
-	//		Type:                 2,
-	//		ExtendID:             0,
-	//		OwnerNameLength:      0,
-	//		ExtendTypeNameLength: 0,
-	//		PassByReferenceFlag:  0,
-	//		alignment:            0,
-	//		SourceType:           0,
-	//		Length:               4,
-	//	},
-	//	},
-	//}).Pack()
-	//assert.Nil(err)
-	//idescribe, err = (&SqliEot{}).Pack()
-	//assert.Nil(err)
-	//_, err = conntion.Write(idescribe)
-	//
-	//reader = NewReader(conntion)
-	//reader.Read(buff)
-	//readseeker = bytes.NewReader(buff)
-	//msgs, err = UnpackSqliTransmission(readseeker)
-	//assert.Nil(err)
-	//msgg = msgs[:2]
-	//assert.IsType(&SqliID{}, msgg)
-	//msgg = msgs[2:3]
-	//assert.IsType(&SqliBind{}, msgg)
-	//msgg = msgs[3:4]
-	//assert.IsType(&SqliExecute{}, msgg)
-	//msgg = msgs[4:5]
-	//assert.IsType(&SqliEot{}, msgg)
-	//
-	//execute, err := (&SqliInsertDone{}).Pack()
-	//assert.Nil(err)
-	//execute, err = (&SqliDone{
-	//	Warning:  0,
-	//	Rows:     2,
-	//	RowID:    267,
-	//	SerialID: 0,
-	//}).Pack()
-	//assert.Nil(err)
-	//execute, err = (&SqliCost{
-	//	EstimatedRows: 1,
-	//	EstimatedIO:   2,
-	//}).Pack()
-	//assert.Nil(err)
-	//execute, err = (&SqliEot{}).Pack()
-	//assert.Nil(err)
-	//_, err = conntion.Write(execute)
-	//
-	//reader = NewReader(conntion)
-	//reader.Read(buff)
-	//readseeker = bytes.NewReader(buff)
-	//msgs, err = UnpackSqliTransmission(readseeker)
-	//assert.Nil(err)
-	//msgg = msgs[:2]
-	//assert.IsType(&SqliID{}, msgg)
-	//msgg = msgs[2:3]
-	//assert.IsType(&SqliRelease{}, msgg)
-	//msgg = msgs[3:4]
-	//assert.IsType(&SqliEot{}, msgg)
-	//
-	//release, err := (&SqliEot{}).Pack()
-	//assert.Nil(err)
-	//_, err = conntion.Write(release)
+	c, err = reader.Read(buff)
+	assert.Nil(err)
+	assert.True(c > 0)
+	buf = buff[:c]
+	readseeker = bytes.NewReader(buf)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.IsType(&SqliID{}, msgs[0])
+	assert.IsType(&SqliCIdescribe{}, msgs[1])
+	assert.IsType(&SqliEot{}, msgs[2])
+
+	idescribe := &SqliIdescribe{
+		Inputfields: 2,
+		Fields: []Sqlifields{{
+			Type:                 2,
+			ExtendID:             0,
+			OwnerNameLength:      0,
+			ExtendTypeNameLength: 0,
+			PassByReferenceFlag:  0,
+			Alignment:            0,
+			SourceType:           0,
+			Length:               4,
+		}, {
+			Type:                 2,
+			ExtendID:             0,
+			OwnerNameLength:      0,
+			ExtendTypeNameLength: 0,
+			PassByReferenceFlag:  0,
+			Alignment:            0,
+			SourceType:           0,
+			Length:               4,
+		}},
+	}
+	transmission = []SqliCommand{idescribe, eott}
+	buffer, err = transmission.Pack()
+	_, err = conntion.Write(buffer)
+
+	c, err = reader.Read(buff)
+	assert.Nil(err)
+	assert.True(c > 0)
+	buf = buff[:c]
+	readseeker = bytes.NewReader(buf)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.IsType(&SqliID{}, msgs[0])
+	assert.IsType(&SqliBind{}, msgs[1])
+	assert.IsType(&SqliExecute{}, msgs[2])
+	assert.IsType(&SqliEot{}, msgs[3])
+
+	done = &SqliDone{
+		Warning:  0,
+		Rows:     0,
+		RowID:    0,
+		SerialID: 0,
+	}
+	cost = &SqliCost{
+		EstimatedRows: 1,
+		EstimatedIO:   2,
+	}
+	transmission = []SqliCommand{done, cost, eott}
+	buffer, err = transmission.Pack()
+	assert.Nil(err)
+	_, err = conntion.Write(buffer)
+	assert.Nil(err)
+
+	c, err = reader.Read(buff)
+	assert.Nil(err)
+	assert.True(c > 0)
+	buf = buff[:c]
+	readseeker = bytes.NewReader(buf)
+	msgs, err = UnpackSqliTransmission(readseeker)
+	assert.IsType(&SqliID{}, msgs[0])
+	assert.IsType(&SqliRelease{}, msgs[1])
+	assert.IsType(&SqliEot{}, msgs[2])
+
+	transmission = []SqliCommand{eott}
+	buffer, err = transmission.Pack()
+	assert.Nil(err)
+	_, err = conntion.Write(buffer)
+	assert.Nil(err)
 
 	front = pgproto3.NewFrontend(conn, nil)
 	msg, err = front.Receive()
@@ -440,15 +432,15 @@ func TestBridgeNOpen(t *testing.T) {
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.BindComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.NoData{}, msg)
 	//msg, err = front.Receive()
 	//assert.Nil(err)
-	//assert.IsType(&pgproto3.NoData{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.RowDescription{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.DataRow{}, msg)
+	//assert.IsType(&pgproto3.RowDescription{}, msg)
+	//msg, err = front.Receive()
+	//assert.Nil(err)
+	//assert.IsType(&pgproto3.DataRow{}, msg)
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.CommandComplete{}, msg)
