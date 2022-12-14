@@ -211,7 +211,6 @@ func TestBridgeNOpen(t *testing.T) {
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf = buff[:c]
-	t.Log(buf)
 	readseeker = bytes.NewReader(buf)
 	msgs, err = UnpackSqliTransmission(readseeker)
 	assert.IsType(&SqliInfo{}, msgs[0])
