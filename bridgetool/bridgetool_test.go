@@ -9,88 +9,6 @@ import (
 	"testing"
 )
 
-func TestBridgeOpen(t *testing.T) {
-	assert := assert.New(t)
-	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
-	assert.Nil(err)
-	startupmessage := &pgproto3.StartupMessage{
-		ProtocolVersion: 196608,
-		Parameters: map[string]string{
-			"DateStyle":          "ISO",
-			"TimeZone":           "Asia/Shanghai",
-			"client_encoding":    "UTF8",
-			"database":           "postgres",
-			"extra_float_digits": "2",
-			"user":               "postgres",
-		},
-	}
-	start := startupmessage.Encode(nil)
-	_, err = conn.Write(start)
-	if err != nil {
-		t.Error("出错了")
-	}
-
-	front := pgproto3.NewFrontend(conn, nil)
-	msg, err := front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.ParameterStatus{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.BackendKeyData{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
-
-	buffer := (&pgproto3.Parse{
-		Name:          "",
-		Query:         "selet * from test",
-		ParameterOIDs: nil,
-	}).Encode(nil)
-	buffer = (&pgproto3.Bind{
-		DestinationPortal:    "",
-		PreparedStatement:    "",
-		ParameterFormatCodes: nil,
-		Parameters:           nil,
-		ResultFormatCodes:    nil,
-	}).Encode(buffer)
-	buffer = (&pgproto3.Describe{
-		ObjectType: 'P',
-		Name:       "",
-	}).Encode(buffer)
-	buffer = (&pgproto3.Execute{
-		Portal:  "",
-		MaxRows: 0,
-	}).Encode(buffer)
-	buffer = (&pgproto3.Sync{}).Encode(buffer)
-	_, err = conn.Write(buffer)
-	if err != nil {
-		t.Error("出错了")
-	}
-
-	front = pgproto3.NewFrontend(conn, nil)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.ParseComplete{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.BindComplete{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.RowDescription{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.DataRow{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.CommandComplete{}, msg)
-	msg, err = front.Receive()
-	assert.Nil(err)
-	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
-}
-
 func TestBridgeNOpen(t *testing.T) {
 	address := "127.0.0.1:11030"
 	clientConn, err := net.ResolveTCPAddr("tcp4", address)
@@ -102,7 +20,7 @@ func TestBridgeNOpen(t *testing.T) {
 	assert := assert.New(t)
 	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
 	assert.Nil(err)
-	front := pgproto3.NewFrontend(conn, nil)
+	//front := pgproto3.NewFrontend(conn, nil)
 	startupmesage := &pgproto3.StartupMessage{
 		ProtocolVersion: 196608,
 		Parameters: map[string]string{
@@ -245,7 +163,7 @@ func TestBridgeNOpen(t *testing.T) {
 	_, err = conntion.Write(buf)
 	assert.Nil(err)
 
-	//front := pgproto3.NewFrontend(conn, nil)
+	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
@@ -261,7 +179,7 @@ func TestBridgeNOpen(t *testing.T) {
 
 	buffer := (&pgproto3.Parse{
 		Name:          "",
-		Query:         "selet * from test",
+		Query:         "select * from test",
 		ParameterOIDs: nil,
 	}).Encode(nil)
 	buffer = (&pgproto3.Bind{
@@ -392,6 +310,10 @@ func TestBridgeNOpen(t *testing.T) {
 	assert.IsType(&SqliExecute{}, msgs[2])
 	assert.IsType(&SqliEot{}, msgs[3])
 
+	insertdone := &SqliInsertDone{
+		Serial8:   1,
+		BigSerial: 2,
+	}
 	done = &SqliDone{
 		Warning:  0,
 		Rows:     0,
@@ -402,7 +324,7 @@ func TestBridgeNOpen(t *testing.T) {
 		EstimatedRows: 1,
 		EstimatedIO:   2,
 	}
-	transmission = []SqliCommand{done, cost, eott}
+	transmission = []SqliCommand{insertdone, done, cost, eott}
 	buffer, err = transmission.Pack()
 	assert.Nil(err)
 	_, err = conntion.Write(buffer)
@@ -472,8 +394,9 @@ func TestConn(t *testing.T) {
 	defer listener.Close()
 
 	assert := assert.New(t)
-	conn, err := net.Dial("tcp4", "127.0.0.1:11088")
+	conn, err := net.Dial("tcp4", "127.0.0.1:11088") //conn : 11088
 	assert.Nil(err)
+	front := pgproto3.NewFrontend(conn, nil)
 	startupmesage := &pgproto3.StartupMessage{
 		ProtocolVersion: 196608,
 		Parameters: map[string]string{
@@ -486,16 +409,16 @@ func TestConn(t *testing.T) {
 		},
 	}
 	start := startupmesage.Encode(nil)
-	_, err = conn.Write(start)
+	_, err = conn.Write(start) //startup message
 	if err != nil {
 		t.Error("出错了")
 	}
 
-	conntion, err := listener.Accept()
+	conntion, err := listener.Accept() //conntion : 11030
 	assert.Nil(err)
 	reader := NewReader(conntion)
 	buff := make([]byte, 16384)
-	c, err := reader.Read(buff)
+	c, err := reader.Read(buff) //authrequest
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf := buff[:c]
@@ -557,10 +480,9 @@ func TestConn(t *testing.T) {
 		Asceot:           127,
 	}).Pack()
 	assert.Nil(err)
-	_, err = conntion.Write(response)
-	assert.Nil(err)
+	conntion.Write(response) //authresponse
 
-	c, err = reader.Read(buff)
+	c, err = reader.Read(buff) //sqliprotocol
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf = buff[:c]
@@ -575,10 +497,10 @@ func TestConn(t *testing.T) {
 	for _, c := range eot {
 		protocol = append(protocol, c)
 	}
-	_, err = conntion.Write(protocol)
+	_, err = conntion.Write(protocol) //sqliprotocol
 	assert.Nil(err)
 
-	c, err = reader.Read(buff)
+	c, err = reader.Read(buff) //sqliinfo
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf = buff[:c]
@@ -587,10 +509,10 @@ func TestConn(t *testing.T) {
 	assert.IsType(&SqliInfo{}, msgs[0])
 	assert.IsType(&SqliEot{}, msgs[1])
 
-	_, err = conntion.Write(eot)
+	_, err = conntion.Write(eot) //sqlieot
 	assert.Nil(err)
 
-	c, err = reader.Read(buff)
+	c, err = reader.Read(buff) //sqlidbopen
 	assert.Nil(err)
 	assert.True(c > 0)
 	buf = buff[:c]
@@ -613,10 +535,9 @@ func TestConn(t *testing.T) {
 	var transmission SqliTransmission
 	transmission = []SqliCommand{done, cost, eott}
 	buf, err = transmission.Pack()
-	_, err = conntion.Write(buf)
+	_, err = conntion.Write(buf) //sqlidone
 	assert.Nil(err)
 
-	front := pgproto3.NewFrontend(conn, nil)
 	msg, err := front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.AuthenticationOk{}, msg)
@@ -626,6 +547,76 @@ func TestConn(t *testing.T) {
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.BackendKeyData{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+
+	buffer := (&pgproto3.Parse{
+		Name:          "",
+		Query:         "SET extra_float_digits = 3",
+		ParameterOIDs: nil,
+	}).Encode(nil)
+	buffer = (&pgproto3.Bind{
+		DestinationPortal:    "",
+		PreparedStatement:    "",
+		ParameterFormatCodes: nil,
+		Parameters:           nil,
+		ResultFormatCodes:    nil,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Execute{
+		Portal:  "",
+		MaxRows: 1,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Sync{}).Encode(buffer)
+	_, err = conn.Write(buffer) //set digits
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ParseComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.BindComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.CommandComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+
+	buffer = (&pgproto3.Parse{
+		Name:          "",
+		Query:         "SET application_name = 'PostgreSQL JDBC Driver'",
+		ParameterOIDs: nil,
+	}).Encode(nil)
+	buffer = (&pgproto3.Bind{
+		DestinationPortal:    "",
+		PreparedStatement:    "",
+		ParameterFormatCodes: nil,
+		Parameters:           nil,
+		ResultFormatCodes:    nil,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Execute{
+		Portal:  "",
+		MaxRows: 0,
+	}).Encode(buffer)
+	buffer = (&pgproto3.Sync{}).Encode(buffer)
+	_, err = conn.Write(buffer) //set JDBC
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.ParseComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.BindComplete{}, msg)
+	msg, err = front.Receive()
+	assert.Nil(err)
+	assert.IsType(&pgproto3.CommandComplete{}, msg)
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
