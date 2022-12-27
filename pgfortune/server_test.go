@@ -83,7 +83,7 @@ func TestPgQuery(t *testing.T) {
 		},
 	}
 	start := startupmesage.Encode(nil)
-	query := &pgproto3.Query{String: "selet * from test"}
+	query := &pgproto3.Query{String: "select * from test"}
 	q := query.Encode(nil)
 	backend := &PgFortuneBackend{
 		backend: pgproto3.NewBackend(write, write), //io.reader和io.writer
