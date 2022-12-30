@@ -699,7 +699,7 @@ func TestBridge_Select_Bind(t *testing.T) {
 	buffer = (&pgproto3.Parse{
 		Name:          "",
 		Query:         "select * from t",
-		ParameterOIDs: nil,
+		ParameterOIDs: []uint32{23},
 	}).Encode(nil)
 	buffer = (&pgproto3.Bind{
 		DestinationPortal:    "",
@@ -1572,7 +1572,7 @@ func TestBridge_NonOpen_Bind(t *testing.T) {
 	buffer = (&pgproto3.Parse{
 		Name:          "",
 		Query:         "insert into t values (1)",
-		ParameterOIDs: nil,
+		ParameterOIDs: []uint32{23},
 	}).Encode(nil)
 	buffer = (&pgproto3.Bind{
 		DestinationPortal:    "",
