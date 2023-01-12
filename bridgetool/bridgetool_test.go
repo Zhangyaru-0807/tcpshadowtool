@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net"
 	"testing"
+	"time"
 )
 
 func TestBridge_Select(t *testing.T) {
@@ -2005,4 +2006,72 @@ func TestConn(t *testing.T) {
 	msg, err = front.Receive()
 	assert.Nil(err)
 	assert.IsType(&pgproto3.ReadyForQuery{}, msg)
+}
+
+func TestSingleMessage(t *testing.T) {
+	conn, err := net.Dial("tcp4", "127.0.0.1:5432")
+	assert.Nil(t, err)
+	startupmesage := &pgproto3.StartupMessage{
+		ProtocolVersion: 196608,
+		Parameters: map[string]string{
+			"DateStyle":          "ISO",
+			"TimeZone":           "Asia/Shanghai",
+			"client_encoding":    "UTF8",
+			"database":           "postgres",
+			"extra_float_digits": "2",
+			"user":               "postgres",
+		},
+	}
+	start := startupmesage.Encode(nil)
+	_, err = conn.Write(start)
+	if err != nil {
+		t.Error("出错了")
+	}
+	time.Sleep(3 * time.Second)
+
+	parse := (&pgproto3.Parse{
+		Name:          "",
+		Query:         "insert into t values (1)",
+		ParameterOIDs: nil,
+	}).Encode(nil)
+	_, err = conn.Write(parse)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	bind := (&pgproto3.Bind{
+		DestinationPortal:    "",
+		PreparedStatement:    "",
+		ParameterFormatCodes: nil,
+		Parameters:           nil,
+		ResultFormatCodes:    nil,
+	}).Encode(nil)
+	_, err = conn.Write(bind)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	describe := (&pgproto3.Describe{
+		ObjectType: 'P',
+		Name:       "",
+	}).Encode(nil)
+	_, err = conn.Write(describe)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	execute := (&pgproto3.Execute{
+		Portal:  "",
+		MaxRows: 1,
+	}).Encode(nil)
+	_, err = conn.Write(execute)
+	if err != nil {
+		t.Error("出错了")
+	}
+
+	sync := (&pgproto3.Sync{}).Encode(nil)
+	_, err = conn.Write(sync)
+	if err != nil {
+		t.Error("出错了")
+	}
 }
